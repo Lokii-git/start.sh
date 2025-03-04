@@ -274,8 +274,8 @@ alias rustscan-file="docker run -it --rm --name rustscan --network host -v $HOME
 # Inform the user
 echo -e "${GREEN}[+] RustScan has been installed via Docker!${RESET}"
 echo -e "${YELLOW}[/] A shared folder has been created at: $SHARED_RUSTSCAN_DIR ${RESET}"
-echo -e "${YELLOW}[/] Place your IP list inside this folder as 'iplist.txt' before running:${RESET}"
-echo "    rustscan-file${RESET}"
+echo -e "${YELLOW}[/] Place your IP list inside this folder as 'iplist.txt' before running:"
+echo "    rustscan-file"
 echo -e "${YELLOW}[/] RustScan outputs will also be saved inside this folder.${RESET}"
 echo -e "${RED}[!] If the alias doesn't work immediately, restart your terminal or run: source ~/.bashrc${RESET}"
 
