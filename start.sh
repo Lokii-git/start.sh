@@ -20,6 +20,12 @@ echo -e "${BLUE}========================================="
 echo -e "🚀 ${YELLOW}Kali Linux Pentesting Setup Script${RESET} 🚀"
 echo -e "${BLUE}=========================================${RESET}"
 
+# Ensure jq is installed
+if ! command -v jq &>/dev/null; then
+    echo "[+] jq is not installed. Installing now..."
+    sudo apt update -y && sudo apt install -y jq
+fi
+
 # Define the GitHub repository and script path
 REPO_URL="https://github.com/Lokii-git/start.sh"
 LOCAL_SCRIPT="$0"
