@@ -16,9 +16,9 @@ RESET='\e[0m'
 RESUME_FLAG="$HOME/.docker_resume"
 
 # Display Banner
-echo -e "${BLUE}=========================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Pentesting Setup Script${RESET} 🚀"
-echo -e "${BLUE}=========================================${RESET}"
+echo -e "${BLUE}==================================================${RESET}"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script${RESET} 🚀"
+echo -e "${BLUE}==================================================${RESET}"
 
 # Ensure jq is installed
 if ! command -v jq &>/dev/null; then
