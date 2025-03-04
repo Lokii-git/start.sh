@@ -1,5 +1,5 @@
 #!/bin/bash
-# Kali Linux Initial Setup Script for Pen Testing
+# Kali Linux Initial Setup Script for Internal Pen Testing
 # Author: Philip Burnham
 # Purpose: Automates updates, upgrades, and essential tool installations.
 
