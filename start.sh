@@ -244,9 +244,9 @@ fi
 # Install Docker
 echo -e "${BLUE}[-] Installing Docker...${RESET}"
 if ! command -v docker &>/dev/null; then
-    sudo apt install -y docker.io > /dev/null 2>&1
-    sudo systemctl enable --now docker > /dev/null 2>&1
-    sudo usermod -aG docker "$USER" > /dev/null 2>&1
+    sudo apt install -y docker.io
+    sudo systemctl enable --now docke
+    sudo usermod -aG docker "$USER"
 
     echo -e "${GREEN}[+] Docker installed successfully.${RESET}"
 else
