@@ -17,7 +17,7 @@ RESUME_FLAG="$HOME/.docker_resume"
 
 # Display Banner
 echo -e "${BLUE}======================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.4${RESET} 🚀"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.5${RESET} 🚀"
 echo -e "${BLUE}======================================================${RESET}"
 
 # Ensure jq is installed
@@ -25,9 +25,6 @@ if ! command -v jq &>/dev/null; then
     echo -e "${YELLOW}[/] jq is not installed. Installing now...${RESET}"
     sudo apt update -y && sudo apt install -y jq
 fi
-
-# Define update script and update variables
-#!/bin/bash
 
 # Define variables
 SCRIPT_PATH="$(realpath "$0")"
@@ -117,7 +114,7 @@ sudo apt update -y && sudo apt full-upgrade -y --allow-downgrades --allow-remove
 
 # Install essential dependencies
 echo -e "${BLUE}[-] Installing core dependencies...${RESET}"
-sudo apt install -y git curl python3 python3-pip
+sudo apt install -y git curl python3 python3-pip > /dev/null 2>&1
 
 # Disable Firefox's password manager
 echo -e "${BLUE}[-] Disabling Firefox password settings...${RESET}"
@@ -150,10 +147,10 @@ mkdir -p "$TOOLS_WORKING_DIR"
 echo -e "${BLUE}[-] Downloading setup scripts from Git repository...${RESET}"
 SETUP_REPO="$TOOLS_WORKING_DIR/setup"
 if [ ! -d "$SETUP_REPO" ]; then
-    git clone https://github.com/Lokii-git/setup.git "$SETUP_REPO"
+    git clone https://github.com/Lokii-git/setup.git "$SETUP_REPO" > /dev/null 2>&1
 else
     echo -e "${BLUE}[-] Repository already exists. Updating...${RESET}"
-    git -C "$SETUP_REPO" pull
+    git -C "$SETUP_REPO" pull > /dev/null 2>&1
 fi
 
 # Move setup scripts and clean up
@@ -176,15 +173,15 @@ TOOLS=(
     evil-winrm proxychains4 tmux
 )
 
-sudo apt install -y "${TOOLS[@]}"
+sudo apt install -y "${TOOLS[@]}" > /dev/null 2>&1
 
 # Ensure CA certificates are up to date
 echo -e "${BLUE}[-] Updating CA certificates...${RESET}"
-sudo apt update && sudo apt install --reinstall -y ca-certificates
-sudo update-ca-certificates
+sudo apt update && sudo apt install --reinstall -y ca-certificates > /dev/null 2>&1
+sudo update-ca-certificates > /dev/null 2>&1
 
 # Set SSL_CERT_FILE explicitly for Python
-export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt > /dev/null 2>&1
 
 # Upgrade pipx and pip while bypassing SSL errors temporarily
 # echo -e "${BLUE}[-] Installing pipx and upgrading pip...${RESET}"
@@ -193,29 +190,29 @@ export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 # pipx upgrade-all
 
 # Install Certipy
-echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
-if ! command -v certipy &>/dev/null; then
-    sudo apt update && sudo apt install -y git python3-venv
-
-    # Clone and install Certipy from GitHub
-    sudo git -c http.sslVerify=false clone https://github.com/ly4k/Certipy.git /opt/certipy
-    python3 -m venv /opt/certipy/venv
-    /opt/certipy/venv/bin/pip install /opt/certipy
-
-    # Create a global symlink so certipy is accessible system-wide
-    sudo ln -sf /opt/certipy/venv/bin/certipy /usr/bin/certipy
-
-    echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
-else
-    echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
-fi
+#echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
+#if ! command -v certipy &>/dev/null; then
+#    sudo apt update && sudo apt install -y git python3-venv
+#
+#    # Clone and install Certipy from GitHub
+#    sudo git -c http.sslVerify=false clone https://github.com/ly4k/Certipy.git /opt/certipy
+#    python3 -m venv /opt/certipy/venv
+#    /opt/certipy/venv/bin/pip install /opt/certipy
+#
+#    # Create a global symlink so certipy is accessible system-wide
+#    sudo ln -sf /opt/certipy/venv/bin/certipy /usr/bin/certipy
+#
+#    echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
+#else
+#    echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
+#fi
 
 # Install Kerbrute
 echo -e "${BLUE}[-] Installing Kerbrute...${RESET}"
 if ! command -v kerbrute &>/dev/null; then
-    wget -O kerbrute https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64
-    chmod +x kerbrute
-    sudo mv kerbrute /usr/local/bin/kerbrute
+    wget -O kerbrute https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64 > /dev/null 2>&1
+    chmod +x kerbrute > /dev/null 2>&1
+    sudo mv kerbrute /usr/local/bin/kerbrute > /dev/null 2>&1
     echo -e "${GREEN}[+] Kerbrute installed successfully!${RESET}"
 else
     echo -e "${GREEN}[+] Kerbrute is already installed.${RESET}"
@@ -224,9 +221,9 @@ fi
 # Install Docker
 echo -e "${BLUE}[-] Installing Docker...${RESET}"
 if ! command -v docker &>/dev/null; then
-    sudo apt install -y docker.io
-    sudo systemctl enable --now docker
-    sudo usermod -aG docker "$USER"
+    sudo apt install -y docker.io > /dev/null 2>&1
+    sudo systemctl enable --now docker > /dev/null 2>&1
+    sudo usermod -aG docker "$USER" > /dev/null 2>&1
 
     echo -e "${GREEN}[+] Docker installed successfully.${RESET}"
 else
@@ -236,23 +233,23 @@ fi
 # Install RustScan via Docker
 echo -e "${BLUE}[-] Installing RustScan using Docker...${RESET}"
 if ! docker images | grep -q "rustscan"; then
-    docker pull rustscan/rustscan:latest
+    docker pull rustscan/rustscan:latest > /dev/null 2>&1
     echo -e "${GREEN}[+] RustScan Docker image downloaded successfully!${RESET}"
 else
     echo -e "${GREEN}[+] RustScan Docker image already exists.${RESET}"
 fi
 
 # Define shared folder path
-SHARED_RUSTSCAN_DIR="$HOME/rustscan"
+SHARED_RUSTSCAN_DIR="$HOME/rustscan" > /dev/null 2>&1
 
 # Ensure the shared folder exists
 if [ ! -d "$SHARED_RUSTSCAN_DIR" ]; then
-    mkdir -p "$SHARED_RUSTSCAN_DIR"
+    mkdir -p "$SHARED_RUSTSCAN_DIR" > /dev/null 2>&1
     echo -e "${GREEN}[+] Created shared RustScan directory: $SHARED_RUSTSCAN_DIR ${RESET}"
 fi
 
 # Set correct permissions so Docker can access it
-chmod 777 "$SHARED_RUSTSCAN_DIR"
+chmod 777 "$SHARED_RUSTSCAN_DIR" > /dev/null 2>&1
 
 # Add RustScan alias for single IP scanning
 echo -e "${BLUE}[-] Creating RustScan aliases...${RESET}"
@@ -272,7 +269,7 @@ else
 fi
 
 # Apply aliases immediately for the current session
-alias rustscan="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest"
+alias rustscan="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest" 
 alias rustscan-file="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest -iL /rustscan/iplist.txt -o /rustscan/rustscan_output.txt"
 
 # Inform the user
@@ -286,9 +283,9 @@ echo -e "${RED}[!] If the alias doesn't work immediately, restart your terminal 
 # Install NetExec (Replacement for CrackMapExec)
 echo -e "${BLUE}[-] Installing NetExec...${RESET}"
 if ! command -v netexec &>/dev/null; then
-    sudo rm -rf /opt/netexec
-    sudo git clone https://github.com/Pennyw0rth/NetExec.git /opt/netexec
-    sudo python3 -m pip install /opt/netexec/.
+    #sudo rm -rf /opt/netexec > /dev/null 2>&1
+    sudo git clone https://github.com/Pennyw0rth/NetExec.git /opt/netexec > /dev/null 2>&1
+    sudo python3 -m pip install /opt/netexec/. > /dev/null 2>&1
     echo -e "${GREEN}[+] NetExec installed successfully!${RESET}"
 else
     echo -e "${GREEN}[+] NetExec is already installed.${RESET}"
@@ -297,8 +294,8 @@ fi
 # Install latest Impacket
 echo -e "${BLUE}[-] Installing Impacket...${RESET}"
 if ! python3 -c "import impacket" &>/dev/null; then
-    sudo git clone https://github.com/SecureAuthCorp/impacket.git /opt/impacket
-    sudo python3 -m pip install /opt/impacket/.
+    sudo git clone https://github.com/SecureAuthCorp/impacket.git /opt/impacket > /dev/null 2>&1
+    sudo python3 -m pip install /opt/impacket/. > /dev/null 2>&1
 else
     echo -e "${GREEN}[+] Impacket is already installed.${RESET}"
 fi
@@ -324,7 +321,7 @@ fi
 
 # Set up custom Kali Linux Message of the Day (MOTD)
 echo -e "${BLUE}[-] Setting up Kali Linux login message...${RESET}"
-sudo chmod -x /etc/update-motd.d/*
+sudo chmod -x /etc/update-motd.d/* > /dev/null 2>&1
 MOTD_CONTENT='
 _________ .__                                       __                
 \_   ___ \|  |   ____ _____ _________  _  _______ _/  |_  ___________ 
@@ -353,14 +350,14 @@ Happy Hacking! 😈
 # Write MOTD to the correct locations
 echo "$MOTD_CONTENT" | sudo tee /etc/motd > /dev/null
 echo "$MOTD_CONTENT" | sudo tee /etc/update-motd.d/00-header > /dev/null
-sudo chmod +x /etc/update-motd.d/00-header
+sudo chmod +x /etc/update-motd.d/00-header > /dev/null 2>&1
 
 echo -e "${GREEN}[+] Custom MOTD set for Kali Linux.${RESET}"
 
 echo -e "${BLUE}[-] Ensuring SSH displays the MOTD on login...${RESET}"
 
 # Modify /etc/ssh/sshd_config to enable MOTD
-SSHD_CONFIG="/etc/ssh/sshd_config"
+SSHD_CONFIG="/etc/ssh/sshd_config" > /dev/null 2>&1
 
 # Ensure PrintMotd is enabled
 if grep -q "^PrintMotd no" "$SSHD_CONFIG"; then
@@ -378,7 +375,7 @@ fi
 # Ensure SSH Banner is set to /etc/motd
 if grep -q "^#Banner none" "$SSHD_CONFIG"; then
     echo -e "${RED}[!] Banner is disabled in SSH config. Fixing now...${RESET}"
-    sudo sed -i 's/^#Banner none/Banner \/etc\/motd/' "$SSHD_CONFIG"
+    sudo sed -i 's/^#Banner none/Banner \/etc\/motd/' "$SSHD_CONFIG" > /dev/null 2>&1
     echo -e "${GREEN}[+] Enabled MOTD banner in SSH config.${RESET}"
 elif ! grep -q "^Banner /etc/motd" "$SSHD_CONFIG"; then
     echo -e "${RED}[!] Banner is missing. Adding it...${RESET}"
@@ -401,7 +398,7 @@ fi
 
 echo -e "${BLUE}[-] Ensuring SSH always displays Kali's MOTD...${RESET}"
 
-SSHD_CONFIG="/etc/ssh/sshd_config"
+SSHD_CONFIG="/etc/ssh/sshd_config" > /dev/null 2>&1
 
 # Ensure SSH always prints the MOTD
 if ! grep -q "^PrintMotd yes" "$SSHD_CONFIG"; then
@@ -416,12 +413,8 @@ if ! grep -q "^Banner /etc/motd" "$SSHD_CONFIG"; then
 fi
 
 # Restart SSH service to apply changes
-sudo systemctl restart ssh
-echo -e "${GREEN}[+] SSH is now configured to display only Kali's MOTD!${RESET}"
-
-# Restart SSH service to apply changes
 echo -e "${YELLOW}[/] Restarting SSH service...${RESET}"
-sudo systemctl restart ssh
+sudo systemctl restart ssh > /dev/null 2>&1
 echo -e "${GREEN}[+] SSH is now configured to display the MOTD!${RESET}"
 
 # Prompt for reboot (skip if running in a test mode)
