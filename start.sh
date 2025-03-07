@@ -26,25 +26,35 @@ if ! command -v jq &>/dev/null; then
     sudo apt update -y && sudo apt install -y jq
 fi
 
-#!/bin/bash
-
 # Define variables
 SCRIPT_PATH="$(realpath "$0")"
 REPO_URL="https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 TMP_SCRIPT="/tmp/start.sh.tmp"
+LAST_UPDATE_FILE="$HOME/.last_script_update"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
+
+# Check if we have a stored hash of the last update
+if [ -f "$LAST_UPDATE_FILE" ]; then
+    LAST_HASH=$(cat "$LAST_UPDATE_FILE")
+else
+    LAST_HASH=""
+fi
 
 # Download latest script WITHOUT SSL verification
 wget --no-check-certificate -q -O "$TMP_SCRIPT" "$REPO_URL"
 
 # Ensure download was successful
 if [ -s "$TMP_SCRIPT" ]; then
-    # Compare current script with downloaded version
-    if ! cmp -s "$SCRIPT_PATH" "$TMP_SCRIPT"; then
+    # Compute hashes for comparison
+    NEW_HASH=$(sha256sum "$TMP_SCRIPT" | awk '{print $1}')
+    CURRENT_HASH=$(sha256sum "$SCRIPT_PATH" | awk '{print $1}')
+
+    if [[ "$NEW_HASH" != "$CURRENT_HASH" && "$NEW_HASH" != "$LAST_HASH" ]]; then
         echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
         chmod +x "$TMP_SCRIPT"
         mv "$TMP_SCRIPT" "$SCRIPT_PATH"
+        echo "$NEW_HASH" > "$LAST_UPDATE_FILE"
         echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
         exec "$SCRIPT_PATH" "$@"
     else
@@ -55,6 +65,7 @@ else
     echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
     rm -f "$TMP_SCRIPT"
 fi
+
 
 # Define a resume flag to track re-login
 RESUME_FLAG="$HOME/.docker_resume"
