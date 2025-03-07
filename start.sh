@@ -26,8 +26,27 @@ if ! command -v jq &>/dev/null; then
     sudo apt update -y && sudo apt install -y jq
 fi
 
-# Bypass SSL verification for git
-git config --global http.sslVerify false
+# Automate SSL Handling
+echo -e "${BLUE}[-] Ensuring SSL certificates are updated...${RESET}"
+
+# Step 1: Update CA Certificates
+sudo apt update && sudo apt install --reinstall -y ca-certificates
+sudo update-ca-certificates --fresh
+
+# Step 2: Check if SSL Verification Works
+if ! curl -I https://api.github.com --silent --fail >/dev/null 2>&1; then
+    echo -e "${YELLOW}[/] SSL verification is failing. Applying workaround...${RESET}"
+
+    # Step 3: Bypass SSL Verification for Curl and Git as a Last Resort
+    export CURL_CA_BUNDLE=""
+    git config --global http.sslVerify false
+    echo 'export CURL_CA_BUNDLE=""' >> ~/.bashrc
+
+    echo -e "${RED}[!] SSL verification is disabled. This is NOT secure but allows script execution.${RESET}"
+else
+    echo -e "${GREEN}[+] SSL certificates are working correctly.${RESET}"
+fi
+
 
 # Define update script and update variables
 SCRIPT_PATH="$0"
