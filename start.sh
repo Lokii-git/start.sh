@@ -256,7 +256,7 @@ fi
 # Install RustScan via Docker
 echo -e "${BLUE}[-] Installing RustScan using Docker...${RESET}"
 if ! docker images | grep -q "rustscan"; then
-    docker pull rustscan/rustscan:latest
+    docker pull rustscan/rustscan:latest --disable-content-trust
     echo -e "${GREEN}[+] RustScan Docker image downloaded successfully!${RESET}"
 else
     echo -e "${GREEN}[+] RustScan Docker image already exists.${RESET}"
