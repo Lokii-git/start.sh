@@ -44,6 +44,9 @@ else
     LAST_COMMIT=""
 fi
 
+# Bypass SSL verification for git
+git config --global http.sslVerify false
+
 # Check if an update is available
 if [[ "$LATEST_COMMIT" != "$LAST_COMMIT" ]]; then
     echo -e "${BLUE}[-] Update found! Downloading the latest version...${RESET}"
@@ -130,8 +133,8 @@ fi
 
 # Update and upgrade Kali Linux
 echo -e "${BLUE}[-] Updating and upgrading Kali Linux...${RESET}"
-sudo apt update -y && sudo apt full-upgrade -y
-sudo apt autoremove -y && sudo apt autoclean -y
+sudo apt update -y && sudo apt full-upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
+#sudo apt autoremove -y && sudo apt autoclean -y
 
 # Install essential dependencies
 echo -e "${BLUE}[-] Installing core dependencies...${RESET}"
@@ -196,12 +199,27 @@ TOOLS=(
 
 sudo apt install -y "${TOOLS[@]}"
 
+# Ensure CA certificates are up to date
+echo -e "${BLUE}[-] Updating CA certificates...${RESET}"
+sudo apt update && sudo apt install --reinstall -y ca-certificates
+sudo update-ca-certificates
+
+# Set SSL_CERT_FILE explicitly for Python
+export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Upgrade pipx and pip while bypassing SSL errors temporarily
+echo -e "${BLUE}[-] Installing pipx and upgrading pip...${RESET}"
+python3 -m ensurepip --default-pip
+pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
+pipx upgrade-all
+
 # Install Certipy using pipx
 echo -e "${BLUE}[-] Installing Certipy...${RESET}"
 if ! command -v certipy &>/dev/null; then
     sudo apt install -y pipx
     python3 -m pipx ensurepath
-    pipx install certipy-ad
+    pipx install certipy-ad --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
+
 else
     echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
 fi
