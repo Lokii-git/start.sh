@@ -32,7 +32,8 @@ LOCAL_SCRIPT="$0"
 GITHUB_API_URL="https://api.github.com/repos/Lokii-git/start.sh/commits/main"
 
 # Get the latest commit hash from GitHub
-LATEST_COMMIT=$(curl -s $GITHUB_API_URL | jq -r '.sha')
+GITHUB_API_URL="https://api.github.com/repos/Lokii-git/start.sh/commits?per_page=1"
+LATEST_COMMIT=$(curl -s $GITHUB_API_URL | jq -r '.[0].sha')
 
 # Path to store the last updated commit hash
 UPDATE_CHECK_FILE="$HOME/.startsh_last_update"
@@ -52,24 +53,20 @@ if [[ "$LATEST_COMMIT" != "$LAST_COMMIT" ]]; then
     echo -e "${BLUE}[-] Update found! Downloading the latest version...${RESET}"
     
     # Download the latest script
-    wget -O "$LOCAL_SCRIPT.tmp" "https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
+    curl -s -o "$LOCAL_SCRIPT.tmp" "https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 
     # Ensure it was downloaded successfully
-    if [ -s "$LOCAL_SCRIPT.tmp" ]; then
+    if grep -q "start.sh" "$LOCAL_SCRIPT.tmp"; then
         chmod +x "$LOCAL_SCRIPT.tmp"
-        
-        # Replace the current script with the updated one
         mv "$LOCAL_SCRIPT.tmp" "$LOCAL_SCRIPT"
-        
-        # Store the new commit hash
         echo "$LATEST_COMMIT" > "$UPDATE_CHECK_FILE"
-
         echo -e "${GREEN}[+] Update applied. Restarting script...${RESET}"
         exec "$LOCAL_SCRIPT" "$@"
     else
         echo -e "${RED}[!] Failed to download the update. Keeping the current version.${RESET}"
         rm -f "$LOCAL_SCRIPT.tmp"
     fi
+
 else
     echo -e "${GREEN}[+] Script is up to date.${RESET}"
 fi
