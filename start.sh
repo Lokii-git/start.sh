@@ -234,23 +234,23 @@ fi
 # Install RustScan via Docker
 echo -e "${BLUE}[-] Installing RustScan using Docker...${RESET}"
 if ! docker images | grep -q "rustscan"; then
-    docker pull rustscan/rustscan:latest > /dev/null 2>&1
+    docker pull rustscan/rustscan:latest > 
     echo -e "${GREEN}[+] RustScan Docker image downloaded successfully!${RESET}"
 else
     echo -e "${GREEN}[+] RustScan Docker image already exists.${RESET}"
 fi
 
 # Define shared folder path
-SHARED_RUSTSCAN_DIR="$HOME/rustscan" > /dev/null 2>&1
+SHARED_RUSTSCAN_DIR="$HOME/rustscan" 
 
 # Ensure the shared folder exists
 if [ ! -d "$SHARED_RUSTSCAN_DIR" ]; then
-    mkdir -p "$SHARED_RUSTSCAN_DIR" > /dev/null 2>&1
+    mkdir -p "$SHARED_RUSTSCAN_DIR" 
     echo -e "${GREEN}[+] Created shared RustScan directory: $SHARED_RUSTSCAN_DIR ${RESET}"
 fi
 
 # Set correct permissions so Docker can access it
-chmod 777 "$SHARED_RUSTSCAN_DIR" > /dev/null 2>&1
+chmod 777 "$SHARED_RUSTSCAN_DIR" > 
 
 # Add RustScan alias for single IP scanning
 echo -e "${BLUE}[-] Creating RustScan aliases...${RESET}"
@@ -284,9 +284,9 @@ echo -e "${RED}[!] If the alias doesn't work immediately, restart your terminal 
 # Install NetExec (Replacement for CrackMapExec)
 echo -e "${BLUE}[-] Installing NetExec...${RESET}"
 if ! command -v netexec &>/dev/null; then
-    #sudo rm -rf /opt/netexec > /dev/null 2>&1
-    sudo git clone https://github.com/Pennyw0rth/NetExec.git /opt/netexec > /dev/null 2>&1
-    sudo python3 -m pip install /opt/netexec/. > /dev/null 2>&1
+    #sudo rm -rf /opt/netexec
+    sudo git -c http.sslVerify=false clone https://github.com/Pennyw0rth/NetExec.git /opt/netexec 
+    sudo python3 -m pip install /opt/netexec/. 
     echo -e "${GREEN}[+] NetExec installed successfully!${RESET}"
 else
     echo -e "${GREEN}[+] NetExec is already installed.${RESET}"
@@ -295,8 +295,8 @@ fi
 # Install latest Impacket
 echo -e "${BLUE}[-] Installing Impacket...${RESET}"
 if ! python3 -c "import impacket" &>/dev/null; then
-    sudo git clone https://github.com/SecureAuthCorp/impacket.git /opt/impacket > /dev/null 2>&1
-    sudo python3 -m pip install /opt/impacket/. > /dev/null 2>&1
+    sudo git -c http.sslVerify=false clone https://github.com/SecureAuthCorp/impacket.git /opt/impacket > /dev/null 2>&1
+    sudo python3 -m pip install /opt/impacket/. 
 else
     echo -e "${GREEN}[+] Impacket is already installed.${RESET}"
 fi
