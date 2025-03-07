@@ -38,14 +38,20 @@ wget --no-check-certificate -q -O /tmp/test_start.sh "https://raw.githubusercont
 # Check if the script has changed
 if ! cmp -s "$0" "/tmp/test_start.sh"; then
     echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
-    mv /tmp/test_start.sh "$0"
+    
+    # Overwrite the script properly to avoid issues with a running process
+    cat /tmp/test_start.sh > "$0"
     chmod +x "$0"
+    
     echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
-    exec "$0" "$@"
+    
+    # Use exec with an absolute path to ensure restart works correctly
+    exec /bin/bash "$0" "$@"
 else
     echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
     rm -f /tmp/test_start.sh
 fi
+
 
 
 # Define a resume flag to track re-login
