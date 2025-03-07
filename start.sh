@@ -33,41 +33,27 @@ TMP_SCRIPT="/tmp/start.sh.tmp"
 SCRIPT_HASH_FILE="$HOME/.startsh_last_hash"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
-
-# Download the latest script without SSL verification
-wget --no-check-certificate -q -O "$TMP_SCRIPT" "$REPO_URL"
+wget --no-check-certificate -q -O "/tmp/start.sh.tmp" "$REPO_URL"
 
 # Ensure the download was successful
-if [ -s "$TMP_SCRIPT" ]; then
-    # Calculate hash of the downloaded script
-    NEW_HASH=$(sha256sum "$TMP_SCRIPT" | awk '{print $1}')
-
-    # Read the last stored hash
-    if [ -f "$SCRIPT_HASH_FILE" ]; then
-        LAST_HASH=$(cat "$SCRIPT_HASH_FILE")
-    else
-        LAST_HASH=""
-    fi
-
-    # Compare hashes to check if the script actually changed
-    if [[ "$NEW_HASH" != "$LAST_HASH" ]]; then
+if [ -s "/tmp/start.sh.tmp" ]; then
+    # Compare current script with downloaded version
+    if ! cmp -s "$SCRIPT_PATH" "/tmp/start.sh.tmp"; then
         echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
-        chmod +x "$TMP_SCRIPT"
-        mv "$TMP_SCRIPT" "$SCRIPT_PATH"
-
-        # Store the new script hash
-        echo "$NEW_HASH" > "$SCRIPT_HASH_FILE"
+        chmod +x "/tmp/start.sh.tmp"
+        mv "/tmp/start.sh.tmp" "$SCRIPT_PATH"
 
         echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
         exec "$SCRIPT_PATH" "$@"
     else
         echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
-        rm -f "$TMP_SCRIPT"
+        rm -f "/tmp/start.sh.tmp"
     fi
 else
     echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
-    rm -f "$TMP_SCRIPT"
+    rm -f "/tmp/start.sh.tmp"
 fi
+
 
 
 
