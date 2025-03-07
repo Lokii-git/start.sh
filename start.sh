@@ -33,42 +33,43 @@ git config --global http.sslVerify false
 SCRIPT_PATH="$0"
 REPO_URL="https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 UPDATE_CHECK_FILE="$HOME/.startsh_last_update"
+TMP_SCRIPT="/tmp/start.sh.tmp"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
 
-# Fetch latest commit SHA from GitHub
+# Fetch the latest commit hash from GitHub
 LATEST_COMMIT=$(curl -s "https://api.github.com/repos/Lokii-git/start.sh/commits?per_page=1" | jq -r '.[0].sha')
 
-# Read last stored commit hash (if exists)
+# Check if we have a previously stored commit hash
 if [ -f "$UPDATE_CHECK_FILE" ]; then
     LAST_COMMIT=$(cat "$UPDATE_CHECK_FILE")
 else
     LAST_COMMIT=""
 fi
 
-# If the script is outdated, download the latest version
+# If the script is outdated, download and replace it
 if [[ "$LATEST_COMMIT" != "$LAST_COMMIT" ]]; then
-    echo -e "${YELLOW}[/] Update found! Downloading the latest script...${RESET}"
+    echo -e "${YELLOW}[/] Update found! Downloading the latest version...${RESET}"
 
-    # Download the latest version from GitHub
-    wget -q -O "$SCRIPT_PATH.tmp" "$REPO_URL"
+    # Download the new script
+    wget -q -O "$TMP_SCRIPT" "$REPO_URL"
 
-    # Ensure the download was successful before replacing
-    if [ -s "$SCRIPT_PATH.tmp" ]; then
-        chmod +x "$SCRIPT_PATH.tmp"
-        mv "$SCRIPT_PATH.tmp" "$SCRIPT_PATH"
+    # Ensure the download was successful
+    if [ -s "$TMP_SCRIPT" ]; then
+        chmod +x "$TMP_SCRIPT"
+        mv "$TMP_SCRIPT" "$SCRIPT_PATH"
 
         # Store the new commit hash
         echo "$LATEST_COMMIT" > "$UPDATE_CHECK_FILE"
 
-        echo -e "${GREEN}[+] Update applied. Restarting script...${RESET}"
+        echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
         exec "$SCRIPT_PATH" "$@"
     else
         echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
-        rm -f "$SCRIPT_PATH.tmp"
+        rm -f "$TMP_SCRIPT"
     fi
 else
-    echo -e "${GREEN}[+] Script is up to date.${RESET}"
+    echo -e "${GREEN}[+] Script is already up to date.${RESET}"
 fi
 
 # Define a resume flag to track re-login
