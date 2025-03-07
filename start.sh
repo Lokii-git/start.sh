@@ -213,16 +213,27 @@ python3 -m ensurepip --default-pip
 pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
 pipx upgrade-all
 
-# Install Certipy using pipx
+# Install Certipy
 echo -e "${BLUE}[-] Installing Certipy...${RESET}"
 if ! command -v certipy &>/dev/null; then
-    sudo apt install -y pipx
-    python3 -m pipx ensurepath
-    pipx install certipy-ad --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
+    # Ensure git and Python dependencies are installed
+    sudo apt update && sudo apt install -y git python3 python3-pip
 
+    # Clone Certipy repository
+    git clone https://github.com/ly4k/Certipy.git /opt/certipy
+
+    # Install Certipy using pip
+    python3 -m pip install --upgrade pip setuptools wheel
+    python3 -m pip install /opt/certipy
+
+    # Ensure Certipy is executable
+    ln -sf /usr/local/bin/certipy /usr/bin/certipy
+
+    echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
 else
     echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
 fi
+
 
 # Install Kerbrute
 echo -e "${BLUE}[-] Installing Kerbrute...${RESET}"
