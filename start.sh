@@ -23,7 +23,7 @@ echo -e "\     \___|  |_\  ___/ / __ \|  | \/\     /  / __ \|  | \  ___/|  | \/"
 echo -e " \______  /____/\___  >____  /__|    \/\_/  (____  /__|  \___  >__|   "
 echo -e "        \/          \/     \/                    \/          \/       "
 echo -e "${BLUE}========================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.2${RESET} 🚀"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.3${RESET} 🚀"
 echo -e "${BLUE}========================================================${RESET}"
 
 # Ensure jq is installed
