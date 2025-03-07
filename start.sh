@@ -215,7 +215,7 @@ if ! command -v certipy &>/dev/null; then
     sudo apt update && sudo apt install -y git python3-venv
 
     # Clone and install Certipy from GitHub
-    sudo git clone https://github.com/ly4k/Certipy.git /opt/certipy
+    sudo git -c http.sslVerify=false clone https://github.com/ly4k/Certipy.git /opt/certipy
     python3 -m venv /opt/certipy/venv
     /opt/certipy/venv/bin/pip install /opt/certipy
 
