@@ -17,7 +17,7 @@ RESUME_FLAG="$HOME/.docker_resume"
 
 # Display Banner
 echo -e "${BLUE}======================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.6${RESET} 🚀"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7${RESET} 🚀"
 echo -e "${BLUE}======================================================${RESET}"
 
 # Ensure jq is installed
@@ -33,8 +33,6 @@ TMP_SCRIPT="/tmp/start.sh.tmp"
 SCRIPT_HASH_FILE="$HOME/.startsh_last_hash"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
-
-# Download the latest version
 wget --no-check-certificate -q -O /tmp/test_start.sh "https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 
 # Check if the script has changed
@@ -48,8 +46,6 @@ else
     echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
     rm -f /tmp/test_start.sh
 fi
-
-
 
 
 # Define a resume flag to track re-login
