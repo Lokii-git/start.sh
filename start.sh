@@ -25,7 +25,7 @@ _________ .__                                       __
         \/          \/     \/                    \/          \/       
 EOF
 echo -e "${BLUE}========================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.3${RESET} 🚀"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.4${RESET} 🚀"
 echo -e "${BLUE}========================================================${RESET}"
 
 # Ensure jq is installed
