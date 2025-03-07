@@ -33,25 +33,20 @@ TMP_SCRIPT="/tmp/start.sh.tmp"
 SCRIPT_HASH_FILE="$HOME/.startsh_last_hash"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
-wget --no-check-certificate -q -O "/tmp/start.sh.tmp" "$REPO_URL"
 
-# Ensure the download was successful
-if [ -s "/tmp/start.sh.tmp" ]; then
-    # Compare current script with downloaded version
-    if ! cmp -s "$SCRIPT_PATH" "/tmp/start.sh.tmp"; then
-        echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
-        chmod +x "/tmp/start.sh.tmp"
-        mv "/tmp/start.sh.tmp" "$SCRIPT_PATH"
+# Download the latest version
+wget --no-check-certificate -q -O /tmp/test_start.sh "https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 
-        echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
-        exec "$SCRIPT_PATH" "$@"
-    else
-        echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
-        rm -f "/tmp/start.sh.tmp"
-    fi
+# Check if the script has changed
+if ! cmp -s "$0" "/tmp/test_start.sh"; then
+    echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
+    mv /tmp/test_start.sh "$0"
+    chmod +x "$0"
+    echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
+    exec "$0" "$@"
 else
-    echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
-    rm -f "/tmp/start.sh.tmp"
+    echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
+    rm -f /tmp/test_start.sh
 fi
 
 
