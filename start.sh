@@ -17,7 +17,7 @@ RESUME_FLAG="$HOME/.docker_resume"
 
 # Display Banner
 echo -e "${BLUE}======================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.3${RESET} 🚀"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.4${RESET} 🚀"
 echo -e "${BLUE}======================================================${RESET}"
 
 # Ensure jq is installed
