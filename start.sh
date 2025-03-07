@@ -26,51 +26,50 @@ if ! command -v jq &>/dev/null; then
     sudo apt update -y && sudo apt install -y jq
 fi
 
-# Define the GitHub repository and script path
-REPO_URL="https://github.com/Lokii-git/start.sh"
-LOCAL_SCRIPT="$0"
-GITHUB_API_URL="https://api.github.com/repos/Lokii-git/start.sh/commits/main"
+# Bypass SSL verification for git
+git config --global http.sslVerify false
 
-# Get the latest commit hash from GitHub
-GITHUB_API_URL="https://api.github.com/repos/Lokii-git/start.sh/commits?per_page=1"
-LATEST_COMMIT=$(curl -s $GITHUB_API_URL | jq -r '.[0].sha')
-
-# Path to store the last updated commit hash
+# Define update script and update variables
+SCRIPT_PATH="$0"
+REPO_URL="https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 UPDATE_CHECK_FILE="$HOME/.startsh_last_update"
 
-# Get the last recorded commit hash (if exists)
+echo -e "${BLUE}[-] Checking for script updates...${RESET}"
+
+# Fetch latest commit SHA from GitHub
+LATEST_COMMIT=$(curl -s "https://api.github.com/repos/Lokii-git/start.sh/commits?per_page=1" | jq -r '.[0].sha')
+
+# Read last stored commit hash (if exists)
 if [ -f "$UPDATE_CHECK_FILE" ]; then
     LAST_COMMIT=$(cat "$UPDATE_CHECK_FILE")
 else
     LAST_COMMIT=""
 fi
 
-# Bypass SSL verification for git
-git config --global http.sslVerify false
-
-# Check if an update is available
+# If the script is outdated, download the latest version
 if [[ "$LATEST_COMMIT" != "$LAST_COMMIT" ]]; then
-    echo -e "${BLUE}[-] Update found! Downloading the latest version...${RESET}"
-    
-    # Download the latest script
-    curl -s -o "$LOCAL_SCRIPT.tmp" "https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
+    echo -e "${YELLOW}[/] Update found! Downloading the latest script...${RESET}"
 
-    # Ensure it was downloaded successfully
-    if grep -q "start.sh" "$LOCAL_SCRIPT.tmp"; then
-        chmod +x "$LOCAL_SCRIPT.tmp"
-        mv "$LOCAL_SCRIPT.tmp" "$LOCAL_SCRIPT"
+    # Download the latest version from GitHub
+    wget -q -O "$SCRIPT_PATH.tmp" "$REPO_URL"
+
+    # Ensure the download was successful before replacing
+    if [ -s "$SCRIPT_PATH.tmp" ]; then
+        chmod +x "$SCRIPT_PATH.tmp"
+        mv "$SCRIPT_PATH.tmp" "$SCRIPT_PATH"
+
+        # Store the new commit hash
         echo "$LATEST_COMMIT" > "$UPDATE_CHECK_FILE"
-        echo -e "${GREEN}[+] Update applied. Restarting script...${RESET}"
-        exec "$LOCAL_SCRIPT" "$@"
-    else
-        echo -e "${RED}[!] Failed to download the update. Keeping the current version.${RESET}"
-        rm -f "$LOCAL_SCRIPT.tmp"
-    fi
 
+        echo -e "${GREEN}[+] Update applied. Restarting script...${RESET}"
+        exec "$SCRIPT_PATH" "$@"
+    else
+        echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
+        rm -f "$SCRIPT_PATH.tmp"
+    fi
 else
     echo -e "${GREEN}[+] Script is up to date.${RESET}"
 fi
-
 
 # Define a resume flag to track re-login
 RESUME_FLAG="$HOME/.docker_resume"
