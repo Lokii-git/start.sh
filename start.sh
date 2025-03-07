@@ -205,10 +205,10 @@ sudo update-ca-certificates
 export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 # Upgrade pipx and pip while bypassing SSL errors temporarily
-echo -e "${BLUE}[-] Installing pipx and upgrading pip...${RESET}"
-python3 -m ensurepip --default-pip
-pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
-pipx upgrade-all
+#echo -e "${BLUE}[-] Installing pipx and upgrading pip...${RESET}"
+#python3 -m ensurepip --default-pip
+#pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
+#pipx upgrade-all
 
 # Install Certipy
 echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
