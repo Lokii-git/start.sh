@@ -211,28 +211,19 @@ pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.
 pipx upgrade-all
 
 # Install Certipy
-echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
+echo -e "${BLUE}[-] Ensuring pip and pipx are installed properly...${RESET}"
 
-if ! command -v certipy &>/dev/null; then
-    # Install dependencies
-    sudo apt update && sudo apt install -y git python3 python3-pip python3-venv
+# Install system-managed pip and pipx via apt (instead of ensurepip)
+sudo apt update && sudo apt install -y python3-pip python3-venv pipx
 
-    # Ensure pip is upgraded
-    python3 -m pip install --upgrade pip setuptools wheel
+# Ensure pip is upgraded and doesn't use ensurepip
+python3 -m pip install --upgrade pip setuptools wheel
 
-    # Clone and install Certipy from GitHub
-    sudo git clone https://github.com/ly4k/Certipy.git /opt/certipy
-    python3 -m pip install /opt/certipy
+# Make sure pipx is added to the path
+export PATH="$HOME/.local/bin:$PATH"
+pipx ensurepath
 
-    # Create a symbolic link to run Certipy from anywhere
-    sudo ln -sf /usr/local/bin/certipy /usr/bin/certipy
-
-    echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
-else
-    echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
-fi
-
-
+echo -e "${GREEN}[+] pip and pipx installed successfully!${RESET}"
 
 # Install Kerbrute
 echo -e "${BLUE}[-] Installing Kerbrute...${RESET}"
