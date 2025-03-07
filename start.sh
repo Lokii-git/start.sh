@@ -16,9 +16,9 @@ RESET='\e[0m'
 RESUME_FLAG="$HOME/.docker_resume"
 
 # Display Banner
-echo -e "${BLUE}======================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.5${RESET} 🚀"
-echo -e "${BLUE}======================================================${RESET}"
+echo -e "${BLUE}========================================================${RESET}"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.1${RESET} 🚀"
+echo -e "${BLUE}========================================================${RESET}"
 
 # Ensure jq is installed
 if ! command -v jq &>/dev/null; then
@@ -37,21 +37,35 @@ wget --no-check-certificate -q -O /tmp/test_start.sh "https://raw.githubusercont
 
 # Check if the script has changed
 if ! cmp -s "$0" "/tmp/test_start.sh"; then
-    echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
-    
-    # Overwrite the script properly to avoid issues with a running process
-    cat /tmp/test_start.sh > "$0"
-    chmod +x "$0"
-    
-    echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
-    
-    # Use exec with an absolute path to ensure restart works correctly
-    exec /bin/bash "$0" "$@"
+    echo -e "${YELLOW}[/] Update found! Creating updater...${RESET}"
+
+    # Create the updater script
+    cat << 'EOF' > /tmp/updater.sh
+#!/bin/bash
+echo "[-] Stopping old script..."
+sleep 1
+
+# Replace the old script
+mv /tmp/test_start.sh "$0"
+chmod +x "$0"
+
+echo "[+] Update applied. Restarting..."
+sleep 1
+
+# Run the updated script
+exec "$0"
+EOF
+
+    # Make updater executable and run it
+    chmod +x /tmp/updater.sh
+    /tmp/updater.sh & disown
+
+    echo -e "${GREEN}[+] Updater launched. Exiting old script.${RESET}"
+    exit 0
 else
     echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
     rm -f /tmp/test_start.sh
 fi
-
 
 
 # Define a resume flag to track re-login
