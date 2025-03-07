@@ -3,6 +3,7 @@
 # Author: Philip Burnham
 # Purpose: Automates updates, upgrades, and essential tool installations.
 
+trap 'echo -e "\n[!] CTRL+C detected! Cleaning up..."; exit 1' SIGINT
 set -e  # Exit on any error
 
 # Define colors
