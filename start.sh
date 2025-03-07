@@ -48,19 +48,24 @@ if ! cmp -s "$0" "/tmp/test_start.sh"; then
     echo -e "${YELLOW}[/] Update found! Creating updater...${RESET}"
 
     # Create the updater script
-    echo -e "#!/bin/bash\n\
-echo \"[-] Stopping old script...\"\n\
-sleep 1\n\
-\n\
-# Replace the old script\n\
-mv /tmp/test_start.sh \"$0\"\n\
-chmod +x \"$0\"\n\
-\n\
-echo \"[+] Update applied. Restarting...\"\n\
-sleep 1\n\
-\n\
-# Run the updated script\n\
-exec \"$0\"" > /tmp/updater.sh
+    cat << EOF > /tmp/updater.sh
+#!/bin/bash
+echo "[-] Stopping old script..."
+sleep 1
+
+# Replace the old script
+mv /tmp/test_start.sh "$0"
+chmod +x "$0"
+
+echo "[+] Update applied. Restarting..."
+sleep 1
+
+# Run the updated script
+exec "$0"
+
+# Delete this updater script after it finishes
+rm -- "\$0"
+EOF
 
     # Make updater executable and run it
     chmod +x /tmp/updater.sh
