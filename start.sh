@@ -230,7 +230,7 @@ export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt > /dev/null 2>&1
 # Install Kerbrute
 echo -e "${BLUE}[-] Installing Kerbrute...${RESET}"
 if ! command -v kerbrute &>/dev/null; then
-    wget -O kerbrute https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64 > /dev/null 2>&1
+    wget --no-check-certificate --quiet -O kerbrute https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64 > /dev/null 2>&1
     chmod +x kerbrute > /dev/null 2>&1
     sudo mv kerbrute /usr/local/bin/kerbrute > /dev/null 2>&1
     echo -e "${GREEN}[+] Kerbrute installed successfully!${RESET}"
