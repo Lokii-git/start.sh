@@ -26,35 +26,38 @@ if ! command -v jq &>/dev/null; then
     sudo apt update -y && sudo apt install -y jq
 fi
 
-# Define variables
+# Define script update variables
 SCRIPT_PATH="$(realpath "$0")"
 REPO_URL="https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 TMP_SCRIPT="/tmp/start.sh.tmp"
-LAST_UPDATE_FILE="$HOME/.last_script_update"
+SCRIPT_HASH_FILE="$HOME/.startsh_last_hash"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
 
-# Check if we have a stored hash of the last update
-if [ -f "$LAST_UPDATE_FILE" ]; then
-    LAST_HASH=$(cat "$LAST_UPDATE_FILE")
-else
-    LAST_HASH=""
-fi
-
-# Download latest script WITHOUT SSL verification
+# Download the latest script without SSL verification
 wget --no-check-certificate -q -O "$TMP_SCRIPT" "$REPO_URL"
 
-# Ensure download was successful
+# Ensure the download was successful
 if [ -s "$TMP_SCRIPT" ]; then
-    # Compute hashes for comparison
+    # Calculate hash of the downloaded script
     NEW_HASH=$(sha256sum "$TMP_SCRIPT" | awk '{print $1}')
-    CURRENT_HASH=$(sha256sum "$SCRIPT_PATH" | awk '{print $1}')
 
-    if [[ "$NEW_HASH" != "$CURRENT_HASH" && "$NEW_HASH" != "$LAST_HASH" ]]; then
+    # Read the last stored hash
+    if [ -f "$SCRIPT_HASH_FILE" ]; then
+        LAST_HASH=$(cat "$SCRIPT_HASH_FILE")
+    else
+        LAST_HASH=""
+    fi
+
+    # Compare hashes to check if the script actually changed
+    if [[ "$NEW_HASH" != "$LAST_HASH" ]]; then
         echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
         chmod +x "$TMP_SCRIPT"
         mv "$TMP_SCRIPT" "$SCRIPT_PATH"
-        echo "$NEW_HASH" > "$LAST_UPDATE_FILE"
+
+        # Store the new script hash
+        echo "$NEW_HASH" > "$SCRIPT_HASH_FILE"
+
         echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
         exec "$SCRIPT_PATH" "$@"
     else
@@ -65,6 +68,7 @@ else
     echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
     rm -f "$TMP_SCRIPT"
 fi
+
 
 
 # Define a resume flag to track re-login
