@@ -26,6 +26,8 @@ if ! command -v jq &>/dev/null; then
     sudo apt update -y && sudo apt install -y jq
 fi
 
+#!/bin/bash
+
 # Define variables
 SCRIPT_PATH="$(realpath "$0")"
 REPO_URL="https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
@@ -33,23 +35,26 @@ TMP_SCRIPT="/tmp/start.sh.tmp"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
 
-# Force download the latest script WITHOUT SSL verification
+# Download latest script WITHOUT SSL verification
 wget --no-check-certificate -q -O "$TMP_SCRIPT" "$REPO_URL"
 
 # Ensure download was successful
 if [ -s "$TMP_SCRIPT" ]; then
-    chmod +x "$TMP_SCRIPT"
-
-    # Replace the current script safely
-    mv "$TMP_SCRIPT" "$SCRIPT_PATH"
-
-    echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
-    exec "$SCRIPT_PATH" "$@"
+    # Compare current script with downloaded version
+    if ! cmp -s "$SCRIPT_PATH" "$TMP_SCRIPT"; then
+        echo -e "${YELLOW}[/] Update found! Applying new version...${RESET}"
+        chmod +x "$TMP_SCRIPT"
+        mv "$TMP_SCRIPT" "$SCRIPT_PATH"
+        echo -e "${GREEN}[+] Update applied successfully. Restarting script...${RESET}"
+        exec "$SCRIPT_PATH" "$@"
+    else
+        echo -e "${GREEN}[+] No update needed. Script is up to date.${RESET}"
+        rm -f "$TMP_SCRIPT"
+    fi
 else
     echo -e "${RED}[!] Failed to download the update. Keeping current version.${RESET}"
     rm -f "$TMP_SCRIPT"
 fi
-
 
 # Define a resume flag to track re-login
 RESUME_FLAG="$HOME/.docker_resume"
