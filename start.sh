@@ -263,6 +263,43 @@ fi
 
 pipx upgrade-all > /dev/null 2>&1
 
+# Install Default-HTTP-Login-Hunter
+echo -e "${BLUE}[-] Installing Default-HTTP-Login-Hunter from GitHub...${RESET}"
+if ! command -v default-http-login-hunter &>/dev/null; then
+    sudo apt update > /dev/null 2>&1
+    sudo apt install -y git python3-venv > /dev/null 2>&1
+
+    # Clone Default-HTTP-Login-Hunter and check if it succeeds
+    if sudo git clone https://github.com/InfosecMatter/default-http-login-hunter.git /opt/default-http-login-hunter > /dev/null 2>&1; then
+        python3 -m venv /opt/default-http-login-hunter/venv
+        /opt/default-http-login-hunter/venv/bin/pip install -r /opt/default-http-login-hunter/requirements.txt > /dev/null 2>&1
+        
+        # Ensure script is executable
+        sudo chmod +x /opt/default-http-login-hunter/default-http-login-hunter.sh
+
+        # Create symlink for easier access
+        sudo ln -sf /opt/default-http-login-hunter/default-http-login-hunter.sh /usr/bin/default-http-login-hunter
+
+        # Run fingerprint update
+        echo -e "${BLUE}[-] Updating Default-HTTP-Login-Hunter fingerprints...${RESET}"
+        /opt/default-http-login-hunter/default-http-login-hunter.sh update > /dev/null 2>&1
+
+        echo -e "${GREEN}[+] Default-HTTP-Login-Hunter installed and updated successfully.${RESET}"
+    else
+        echo -e "${RED}[!] Failed to clone Default-HTTP-Login-Hunter. Check your SSL settings.${RESET}"
+    fi
+else
+    echo -e "${GREEN}[+] Default-HTTP-Login-Hunter is already installed.${RESET}"
+    
+    # Ensure script is executable before updating
+    sudo chmod +x /opt/default-http-login-hunter/default-http-login-hunter.sh
+
+    # Ensure fingerprints are up to date
+    echo -e "${BLUE}[-] Updating Default-HTTP-Login-Hunter fingerprints...${RESET}"
+    /opt/default-http-login-hunter/default-http-login-hunter.sh update > /dev/null 2>&1
+    echo -e "${GREEN}[+] Fingerprints updated successfully.${RESET}"
+fi
+
 # Install Certipy
 echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
 if ! command -v certipy &>/dev/null; then
@@ -273,7 +310,10 @@ if ! command -v certipy &>/dev/null; then
     if sudo git clone https://github.com/ly4k/Certipy.git /opt/certipy > /dev/null 2>&1; then
         python3 -m venv /opt/certipy/venv
         /opt/certipy/venv/bin/pip install /opt/certipy > /dev/null 2>&1
+
+        # Create symlink for easy execution
         sudo ln -sf /opt/certipy/venv/bin/certipy /usr/bin/certipy
+
         echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
     else
         echo -e "${RED}[!] Failed to clone Certipy. Check your SSL settings.${RESET}"
