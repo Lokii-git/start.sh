@@ -3,7 +3,6 @@
 # Author: Philip Burnham
 # Purpose: Automates updates, upgrades, and essential tool installations.
 
-trap 'echo -e "\n[!] CTRL+C detected! Cleaning up..."; exit 1' SIGINT
 set -e  # Exit on any error
 
 # Define colors
@@ -26,8 +25,16 @@ _________ .__                                       __
         \/          \/     \/                    \/          \/       
 EOF
 echo -e "${BLUE}========================================================${RESET}"
-echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.4${RESET} 🚀"
+echo -e "🚀 ${YELLOW}Kali Linux Internal Pentesting Setup Script v1.7.2${RESET} 🚀"
 echo -e "${BLUE}========================================================${RESET}"
+
+# Ensure CA certificates are up to date
+echo -e "${BLUE}[-] Updating CA certificates...${RESET}"
+sudo apt update && sudo apt install --reinstall -y ca-certificates > /dev/null 2>&1
+sudo update-ca-certificates > /dev/null 2>&1
+
+# Set SSL_CERT_FILE explicitly for Python
+export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt > /dev/null 2>&1
 
 # Ensure jq is installed
 if ! command -v jq &>/dev/null; then
@@ -39,33 +46,29 @@ fi
 SCRIPT_PATH="$(realpath "$0")"
 REPO_URL="https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
 TMP_SCRIPT="/tmp/start.sh.tmp"
-SCRIPT_HASH_FILE="$HOME/.startsh_last_hash"
 
 echo -e "${BLUE}[-] Checking for script updates...${RESET}"
-wget --no-check-certificate -q -O /tmp/test_start.sh "https://raw.githubusercontent.com/Lokii-git/start.sh/main/start.sh"
+wget --no-check-certificate -q -O /tmp/test_start.sh "$REPO_URL"
 
 # Check if the script has changed
 if ! cmp -s "$0" "/tmp/test_start.sh"; then
     echo -e "${YELLOW}[/] Update found! Creating updater...${RESET}"
 
     # Create the updater script
-    cat << EOF > /tmp/updater.sh
+    cat << 'EOF' > /tmp/updater.sh
 #!/bin/bash
 echo "[-] Stopping old script..."
 sleep 1
 
 # Replace the old script
-mv /tmp/test_start.sh "$0"
-chmod +x "$0"
+mv /tmp/test_start.sh "$SCRIPT_PATH"
+chmod +x "$SCRIPT_PATH"
 
 echo "[+] Update applied. Restarting..."
 sleep 1
 
 # Run the updated script
-exec "$0"
-
-# Delete this updater script after it finishes
-rm -- "\$0"
+exec "$SCRIPT_PATH"
 EOF
 
     # Make updater executable and run it
@@ -79,37 +82,34 @@ else
     rm -f /tmp/test_start.sh
 fi
 
-
-# Define a resume flag to track re-login
-RESUME_FLAG="$HOME/.docker_resume"
-
-# Check if this is a resumed session after login
-if [ -f "$RESUME_FLAG" ]; then
-    echo -e "${BLUE}[-] Resuming script after re-login...${RESET}"
-    rm "$RESUME_FLAG"  # Remove flag to avoid infinite loops
-else
-    # Check if the user is in the Docker group
-    if ! groups | grep -q "\bdocker\b"; then
-        echo -e "${RED}[!] Your user is not in the Docker group. Adding now...${RESET}"
-        sudo usermod -aG docker "$USER"
-        echo -e "${GREEN}[+] Added $USER to the 'docker' group.${RESET}"
-        echo -e "${YELLOW}[/] You will now be logged out to apply changes. Rerun the start.sh script after logging back in if autoresume fails.${RESET}"
-
-        # Store a flag to resume the script after login
-        touch "$RESUME_FLAG"
-
-        # Automate logout (works for GUI, SSH, and TTY)
-        gnome-session-quit --no-prompt &>/dev/null || \
-        pkill -KILL -u "$USER" || \
-        logout || \
-        exit
-
-        # The script stops here, and when the user logs back in, it will resume
+# Check for SSL Inspection
+detect_ssl_inspection() {
+    local domain="$1"
+    local output=$(echo | openssl s_client -connect "$domain:443" -servername "$domain" 2>/dev/null | openssl x509 -noout -issuer -subject)
+    if [[ "$output" =~ "SonicWall" || "$output" =~ "Fortinet" || "$output" =~ "Proxy" || "$output" =~ "self-signed" ]]; then
+        echo -e "${RED}[!] SSL Inspection detected for $domain. Request support to disable it!${RESET}"
     else
-        echo -e "${GREEN}[+] User already has Docker permissions.${RESET}"
+        echo -e "${GREEN}[+] No SSL Inspection detected for $domain.${RESET}"
     fi
-fi
+}
 
+
+echo -e "${BLUE}[-] Checking for SSL Inspection...${RESET}"
+detect_ssl_inspection "docker.io"
+detect_ssl_inspection "horizon3ai.com"
+detect_ssl_inspection "s3.amazonaws.com"
+
+# Ensure the user is in the Docker group
+if ! groups | grep -q "\bdocker\b"; then
+    echo -e "${RED}[!] Your user is not in the Docker group. Adding now...${RESET}"
+    sudo usermod -aG docker "$USER"
+    echo -e "${GREEN}[+] Added $USER to the 'docker' group.${RESET}"
+    echo -e "${YELLOW}[/] You will be logged out to apply changes. Rerun this script after logging back in.${RESET}"
+    touch "$RESUME_FLAG"
+    echo -e "${YELLOW}[/] Please log out and back in for Docker group changes to take effect.${RESET}"
+else
+    echo -e "${GREEN}[+] User already has Docker permissions.${RESET}"
+fi
 echo -e "${BLUE}[-] Checking system hostname configuration...${RESET}"
 
 # Get the current hostname
@@ -139,11 +139,10 @@ fi
 # Update and upgrade Kali Linux
 echo -e "${BLUE}[-] Updating and upgrading Kali Linux...${RESET}"
 sudo apt update -y && sudo apt full-upgrade -y --allow-downgrades --allow-remove-essential --allow-change-held-packages
-#sudo apt autoremove -y && sudo apt autoclean -y
 
 # Install essential dependencies
 echo -e "${BLUE}[-] Installing core dependencies...${RESET}"
-sudo apt install -y git curl python3 python3-pip > /dev/null 2>&1
+sudo apt install -y git python3 python3-pip
 
 # Disable Firefox's password manager
 echo -e "${BLUE}[-] Disabling Firefox password settings...${RESET}"
@@ -194,65 +193,71 @@ if [ -d "$SETUP_REPO" ]; then
     echo -e "${GREEN}[+] Setup scripts moved, permissions set, and cleanup completed.${RESET}"
 fi
 
-# Install common penetration testing tools
-echo -e "${BLUE}[-] Installing common penetration testing tools...${RESET}"
-TOOLS=(
-    nmap gobuster ffuf amass nuclei responder bloodhound neo4j
-    impacket-scripts netexec enum4linux smbclient ldap-utils seclists
-    evil-winrm proxychains4 tmux
+# Clone and set up tools
+echo -e "${BLUE}[-] Setting up pentesting tools...${RESET}"
+TOOLS_DIR="$HOME/tools"
+mkdir -p "$TOOLS_DIR"
+cd "$TOOLS_DIR"
+
+declare -A REPOS=(
+    [kerbrute]="https://github.com/ropnop/kerbrute.git"
+    [nmap]="https://github.com/nmap/nmap.git"
+    [ffuf]="https://github.com/ffuf/ffuf.git"
 )
 
-sudo apt install -y "${TOOLS[@]}" > /dev/null 2>&1
+for tool in "${!REPOS[@]}"; do
+    if [ ! -d "$TOOLS_DIR/$tool" ]; then
+        git clone --depth=1 "${REPOS[$tool]}" "$TOOLS_DIR/$tool"
+        echo -e "${GREEN}[+] Installed $tool.${RESET}"
+    else
+        echo -e "${YELLOW}[/] $tool already exists. Pulling latest changes...${RESET}"
+        git -C "$TOOLS_DIR/$tool" pull
+    fi
+done
 
-# Ensure CA certificates are up to date
-echo -e "${BLUE}[-] Updating CA certificates...${RESET}"
-sudo apt update && sudo apt install --reinstall -y ca-certificates > /dev/null 2>&1
-sudo update-ca-certificates > /dev/null 2>&1
 
-# Set SSL_CERT_FILE explicitly for Python
-export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt > /dev/null 2>&1
+#Upgrade pipx and pip while bypassing SSL errors temporarily
+echo -e "${BLUE}[-] Installing pipx and upgrading pip...${RESET}"
+python3 -m ensurepip --default-pip
+pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
+pipx upgrade-all
 
-# Upgrade pipx and pip while bypassing SSL errors temporarily
-# echo -e "${BLUE}[-] Installing pipx and upgrading pip...${RESET}"
-# python3 -m ensurepip --default-pip
-# pipx install pip --pip-args="--trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org"
-# pipx upgrade-all
+#Install Certipy
+echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
+if ! command -v certipy &>/dev/null; then
+    sudo apt update && sudo apt install -y git python3-venv
 
-# Install Certipy
-#echo -e "${BLUE}[-] Installing Certipy from GitHub...${RESET}"
-#if ! command -v certipy &>/dev/null; then
-#    sudo apt update && sudo apt install -y git python3-venv
-#
-#    # Clone and install Certipy from GitHub
-#    sudo git -c http.sslVerify=false clone https://github.com/ly4k/Certipy.git /opt/certipy
-#    python3 -m venv /opt/certipy/venv
-#    /opt/certipy/venv/bin/pip install /opt/certipy
-#
-#    # Create a global symlink so certipy is accessible system-wide
-#    sudo ln -sf /opt/certipy/venv/bin/certipy /usr/bin/certipy
-#
-#    echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
-#else
-#    echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
-#fi
+    # Clone and install Certipy from GitHub
+    sudo git -c http.sslVerify=false clone https://github.com/ly4k/Certipy.git /opt/certipy
+    python3 -m venv /opt/certipy/venv
+    /opt/certipy/venv/bin/pip install /opt/certipy
+
+    # Create a global symlink so certipy is accessible system-wide
+    sudo ln -sf /opt/certipy/venv/bin/certipy /usr/bin/certipy
+
+    echo -e "${GREEN}[+] Certipy installed successfully from GitHub.${RESET}"
+else
+    echo -e "${GREEN}[+] Certipy is already installed.${RESET}"
+fi
 
 # Install Kerbrute
 echo -e "${BLUE}[-] Installing Kerbrute...${RESET}"
 if ! command -v kerbrute &>/dev/null; then
-    wget --no-check-certificate --quiet -O kerbrute https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64 > /dev/null 2>&1
-    chmod +x kerbrute > /dev/null 2>&1
+    wget --no-check-certificate --quiet -O kerbrute https://github.com/ropnop/kerbrute/releases/latest/download/kerbrute_linux_amd64
+if [ -f "kerbrute" ]; then > /dev/null 2>&1
+        chmod +x kerbrute > /dev/null 2>&1
     sudo mv kerbrute /usr/local/bin/kerbrute > /dev/null 2>&1
     echo -e "${GREEN}[+] Kerbrute installed successfully!${RESET}"
 else
-    echo -e "${GREEN}[+] Kerbrute is already installed.${RESET}"
+    echo -e "${RED}[!] Failed to download Kerbrute.${RESET}"
 fi
 
 # Install Docker
 echo -e "${BLUE}[-] Installing Docker...${RESET}"
 if ! command -v docker &>/dev/null; then
-    sudo apt install -y docker.io
-    sudo systemctl enable --now docke
-    sudo usermod -aG docker "$USER"
+    sudo apt install -y docker.io > /dev/null 2>&1
+    sudo systemctl enable --now docker > /dev/null 2>&1
+    sudo usermod -aG docker "$USER" > /dev/null 2>&1
 
     echo -e "${GREEN}[+] Docker installed successfully.${RESET}"
 else
@@ -262,7 +267,7 @@ fi
 # Install RustScan via Docker
 echo -e "${BLUE}[-] Installing RustScan using Docker...${RESET}"
 if ! docker images | grep -q "rustscan"; then
-    docker pull rustscan/rustscan:latest --disable-content-trust
+    docker pull rustscan/rustscan:latest > 
     echo -e "${GREEN}[+] RustScan Docker image downloaded successfully!${RESET}"
 else
     echo -e "${GREEN}[+] RustScan Docker image already exists.${RESET}"
@@ -282,20 +287,18 @@ chmod 777 "$SHARED_RUSTSCAN_DIR" >
 
 # Add RustScan alias for single IP scanning
 echo -e "${BLUE}[-] Creating RustScan aliases...${RESET}"
-if ! grep -q "alias rustscan=" "$HOME/.bashrc"; then
-    echo 'alias rustscan="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest"' >> "$HOME/.bashrc"
-    echo -e "${GREEN}[+] RustScan alias added to ~/.bashrc${RESET}"
-else
-    echo -e "${GREEN}[+] RustScan alias already exists in ~/.bashrc${RESET}"
-fi
+
+# Remove existing RustScan aliases if they exist
+sed -i '/alias rustscan/d' "$HOME/.bashrc"
+sed -i '/alias rustscan-file/d' "$HOME/.bashrc"
+
+# Add RustScan alias for single IP scanning
+echo 'alias rustscan="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest"' >> "$HOME/.bashrc"
+echo -e "${GREEN}[+] RustScan alias added to ~/.bashrc${RESET}"
 
 # Add RustScan alias for scanning from an IP list file in the shared folder
-if ! grep -q "alias rustscan-file=" "$HOME/.bashrc"; then
-    echo 'alias rustscan-file="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest -iL /rustscan/iplist.txt -o /rustscan/rustscan_output.txt"' >> "$HOME/.bashrc"
-    echo -e "${GREEN}[+] RustScan file scan alias added to ~/.bashrc${RESET}"
-else
-    echo -e "${GREEN}[+] RustScan file scan alias already exists in ~/.bashrc${RESET}"
-fi
+echo 'alias rustscan-file="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest -iL /rustscan/iplist.txt -o /rustscan/rustscan_output.txt"' >> "$HOME/.bashrc"
+echo -e "${GREEN}[+] RustScan file scan alias added to ~/.bashrc${RESET}"
 
 # Apply aliases immediately for the current session
 alias rustscan="docker run -it --rm --name rustscan --network host -v $HOME/rustscan:/rustscan rustscan/rustscan:latest" 
