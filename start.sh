@@ -172,8 +172,9 @@ fi
 # Update and upgrade Kali Linux silently
 echo -e "${BLUE}[-] Updating and upgrading Kali Linux...${RESET}"
 export DEBIAN_FRONTEND=noninteractive
+sudo apt-mark hold python3 python3-dev python3-pip
 sudo apt update -y > /dev/null 2>&1
-sudo apt full-upgrade -y --allow-downgrades --allow-change-held-packages -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" > /dev/null 2>&1
+sudo apt full-upgrade -y --allow-downgrades -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" > /dev/null 2>&1
 
 
 # Install essential dependencies
